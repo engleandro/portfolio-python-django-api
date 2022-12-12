@@ -1,0 +1,36 @@
+[tool.poetry]
+name = "challenge-cocus"
+version = "0.1.0"
+description = ""
+authors = ["alves.engleandro <alves.engleandro@gmail.com>"]
+readme = "README.md"
+packages = [{include = "challenge_cocus"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+django = "^4.1.4"
+djangorestframework = "^3.14.0"
+drf-yasg = "^1.21.4"
+djangorestframework-simplejwt = "^5.2.2"
+django-allauth = "^0.51.0"
+dj-rest-auth = "^2.2.5"
+gunicorn = "^20.1.0"
+redis = "^4.4.0"
+django-filter = "^22.1"
+python-dotenv = "^0.21.0"
+psycopg = {extras = ["binary"], version = "^3.1.4"}
+psycopg2-binary = "^2.9.5"
+graphene-django = "^3.0.0"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^22.12.0"
+isort = "^5.10.1"
+flake8 = "^6.0.0"
+bandit = "^1.7.4"
+pytest = "^7.2.0"
+pre-commit = "^2.20.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

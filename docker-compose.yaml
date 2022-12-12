@@ -1,0 +1,48 @@
+version: "3.8"
+services:
+
+  app:
+    container_name: triangles_api
+    env_file: .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - database
+      - cache
+    ports:
+      - "8000:8000"
+    command: poetry run python -Wd manage.py runserver 0.0.0.0:8000
+    #command: poetry run gunicorn main.wsgi --bind 0.0.0.0:8000 --workers 3
+  
+  database:
+    image: postgres:alpine
+    env_file: .env
+    environment:
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_DB=${DATABASE_NAME}
+      #- POSTGRES_PORT=${DATABASE_PORT}
+      #- POSTGRES_HOST=${DATABASE_HOST}
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres:/var/lib/postgresql/data/
+  
+  cache:
+    image: redis:alpine
+    env_file: .env
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes: 
+      - cache:/app/cache
+    command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes
+
+volumes:
+  postgres:
+  cache:

@@ -1,0 +1,4 @@
+KEY=VALUE
+MAP={
+    KEY: VALUE
+}

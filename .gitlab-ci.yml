@@ -1,0 +1,46 @@
+# GitLAB CI Configuration File (.gitlab-ci.yml): https://docs.gitlab.com/ee/ci/yaml/
+# GitLAB CI/CD: https://docs.gitlab.com/ee/ci/
+
+default:
+  image: nikolaik/python-nodejs:latest
+
+variables:
+  BUCKET_NAME: creoate-lambdas
+  LAMBDA_NAME: data-apis
+
+stages:
+  - lintering
+  - validate
+  - build
+  - test
+  - publish
+  - infra-ops
+  - deploy-dev
+  - deploy-prd
+
+validate:
+  image: nikolaik/python-nodejs:latest
+  stage: validate
+  script:
+    - echo "Build..."
+    - poetry install --only dev --no-root
+    - echo "Linting..."
+    - poetry run black --check main/
+    - poetry run black --check apps/
+    - poetry run black --check tests/
+    - poetry run isort main/
+    - poetry run isort apps/
+    - poetry run isort tests/
+    - poetry run flake8
+    - poetry run bandit -r main
+    - poetry run bandit -r apps
+    - poetry run bandit -r tests
+    - echo "Testing..."
+    - poetry run python manage.py test
+    - poetry run pytest -vv
+  artifacts:
+    paths:
+      - pyproject.toml
+  only:
+    - merge_requests
+    - main
