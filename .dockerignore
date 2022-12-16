@@ -1,9 +1,28 @@
 # Byte-compiled / optimized / DLL files
+
 __pycache__/
 */__pycache__/
 */*/__pycache__/
 
 # Virtualenvs
-venv
-.env
-env
+
+venv/
+.venv/
+env/
+
+# terraform
+.terraform
+*/.terraform
+*/*/.terraform
+*/*/*/.terraform
+*/*/*/.terraform
+*.tfstate
+
+# Project files
+
+.gitlab-ci.yml
+.gitignore
+.python-version
+apidoc.yaml
+LICENSE
+README.md

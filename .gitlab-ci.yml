@@ -1,46 +1,100 @@
 # GitLAB CI Configuration File (.gitlab-ci.yml): https://docs.gitlab.com/ee/ci/yaml/
 # GitLAB CI/CD: https://docs.gitlab.com/ee/ci/
 
+
 default:
-  image: nikolaik/python-nodejs:latest
+  image: python:alpine
+
 
 variables:
-  BUCKET_NAME: creoate-lambdas
-  LAMBDA_NAME: data-apis
+  AWS_PROFILE: ${AWS_PROFILE}
+  AWS_ACCOUNT_ID: ${AWS_ACCOUNT_ID}
+  AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+  AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+  AWS_REGION: ${AWS_REGION}
+  IMAGE_NAME: ${IMAGE_NAME}
+  TAG_LATEST: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_NAME:latest
+  TAG_COMMIT: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
+  DOCKER_TLS_CERTDIR: ""
+
 
 stages:
-  - lintering
   - validate
-  - build
-  - test
-  - publish
-  - infra-ops
+  - build-publish
+  - infrastructure
   - deploy-dev
   - deploy-prd
 
-validate:
-  image: nikolaik/python-nodejs:latest
+
+linting:
+  image: python:alpine
   stage: validate
   script:
-    - echo "Build..."
+    - echo "Installing prerequisites..."
+    - apk update
+    - pip install --upgrade pip wheel poetry
+    - echo "Build environment..."
     - poetry install --only dev --no-root
+    - poetry run pre-commit install
     - echo "Linting..."
-    - poetry run black --check main/
-    - poetry run black --check apps/
-    - poetry run black --check tests/
-    - poetry run isort main/
-    - poetry run isort apps/
-    - poetry run isort tests/
-    - poetry run flake8
-    - poetry run bandit -r main
-    - poetry run bandit -r apps
-    - poetry run bandit -r tests
-    - echo "Testing..."
-    - poetry run python manage.py test
-    - poetry run pytest -vv
+    - poetry run black --check .
+    - poetry run isort .
+    - poetry run flake8 .
+    - poetry run bandit -r .
+    - echo "Pre-commiting..."
+    - poetry run pre-commit run --all-files
   artifacts:
     paths:
       - pyproject.toml
   only:
     - merge_requests
     - main
+
+
+testing:
+  image: python:alpine
+  stage: validate
+  script:
+    - echo "installing prerequisites..."
+    - apk update && apk add --no-cache --virtual postgresql-dev gcc musl-dev
+    - pip install --upgrade pip wheel poetry
+    - echo "Build environment...."
+    - poetry install --no-root
+    - echo "Testing..."
+    - poetry run pytest -vv --exitfirst
+    - poetry run python manage.py test -p "test_*.py" --fastfail
+    - poetry run python -Wd manage.py runserver 0.0.0.0:8000
+    - sleep 120
+    - echo "health checking..."
+    - chmod +x /app/scripts/ping.sh
+    - source /app/scripts/ping.sh
+    - echo "building api documentation..."
+    - wget -O apidoc.yaml http://localhost:8000/api/v1/api-doc/
+  artifacts:
+    paths:
+      - apidoc.yaml
+  only:
+    - merge_requests
+    - main
+
+
+build-publish:
+  image: docker:stable
+  stage: build-publish
+  only:
+    - main
+  services:
+    - docker:dind
+  before_script:
+    - apk add --no-cache python3 py3-pip
+    - pip3 install --no-cache-dir awscli
+  script:
+    - aws ecr get-login-password --region $AWS_REGION |
+      docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+    - docker pull $TAG_LATEST || true
+    - docker build --cache-from $TAG_LATEST -t $TAG_COMMIT -t $TAG_LATEST .
+    - docker push $TAG_COMMIT
+    - docker push $TAG_LATEST
+
+
+#docker build -t "${AWS_ACCOUNT_ID}.dkr.ecr.us-west-1.amazonaws.com/${APPLICATION_NAME}:latest" .

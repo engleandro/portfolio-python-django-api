@@ -1,13 +1,12 @@
 from rest_framework.routers import SimpleRouter
 
-#from apps.triangles.apiviews import HouseViewSet, MemberViewSet
+from apps.triangles.apiviews import TrianglesViewSet
 
-app = 'triangles'
+app = "triangles"
 
 router = SimpleRouter()
 
-#router.register(r'houses', HouseViewSet)
-#router.register(r'members', MemberViewSet)
+router.register(r"", TrianglesViewSet)
 
 urlpatterns = []
 urlpatterns += router.urls

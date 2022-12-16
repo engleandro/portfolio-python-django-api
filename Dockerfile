@@ -5,9 +5,9 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-RUN apk update && apk add --no-cache --virtual postgresql-dev gcc python3-dev musl-dev
+RUN apk update && apk add --no-cache --virtual postgresql-dev gcc musl-dev
 
-RUN pip install --upgrade pip wheel setuptools poetry
+RUN pip install --upgrade pip wheel poetry
 
 COPY pyproject.toml pyproject.toml
 COPY poetry.lock poetry.lock
@@ -19,5 +19,5 @@ COPY . .
 
 EXPOSE 8000
 
-RUN chmod +x /app/entrypoint.sh
-ENTRYPOINT ["/app/entrypoint.sh"]
+RUN chmod +x /app/scripts/entrypoint.sh
+ENTRYPOINT ["/app/scripts/entrypoint.sh"]

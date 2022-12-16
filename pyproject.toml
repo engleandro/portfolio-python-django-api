@@ -17,10 +17,12 @@ dj-rest-auth = "^2.2.5"
 gunicorn = "^20.1.0"
 redis = "^4.4.0"
 django-filter = "^22.1"
-python-dotenv = "^0.21.0"
 psycopg = {extras = ["binary"], version = "^3.1.4"}
 psycopg2-binary = "^2.9.5"
 graphene-django = "^3.0.0"
+environs = "^9.5.0"
+boto3 = "^1.26.30"
+watchtower = "^3.0.0"
 
 
 [tool.poetry.group.dev.dependencies]
